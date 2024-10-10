@@ -12,6 +12,7 @@ https://dsg-titech.github.io/simblock/
 - [User Guide (Japanese)](https://github.com/dsg-titech/simblock/blob/master/docs/jp/usage.md)
 
 We set the obtained worst propagation time in the modified SimBlock and run simulations to verify the validity of the theoretical stale block rate. Please refer to the following URL for the modified SimBlock.
+(modfied SimBlock URL: [https://github.com/dec-love/modfied_simblock](https://github.com/dec-love/modfied_simblock))
 
 ## License
 
