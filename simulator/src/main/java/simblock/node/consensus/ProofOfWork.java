@@ -17,6 +17,9 @@
 package simblock.node.consensus;
 
 import static simblock.simulator.Main.random;
+import static simblock.settings.SimulationConfiguration.NUM_OF_NODES;
+import static simblock.simulator.Simulator.getSimulatedNodes;
+import static simblock.simulator.Simulator.getTargetInterval;
 
 import java.math.BigInteger;
 import simblock.block.Block;
@@ -42,21 +45,45 @@ public class ProofOfWork extends AbstractConsensusAlgo {
     Node selfNode = this.getSelfNode();
     ProofOfWorkBlock parent = (ProofOfWorkBlock) selfNode.getBlock();
     BigInteger difficulty = parent.getNextDifficulty();
+    // if (parent == null) {
+    // long totalMiningPower = 0;
+    // for (Node node : getSimulatedNodes()) {
+    // totalMiningPower += node.getMiningPower();
+    // }
+    // difficulty = BigInteger.valueOf(totalMiningPower * getTargetInterval());
+    // } else {
+    // difficulty = parent.getNextDifficulty();
+    // }
     double u = random.nextDouble();
-    return new MiningTask(
-        selfNode,
-        (long) (-Math.log(1 - u) * difficulty.doubleValue() / selfNode.getMiningPower()),
-        difficulty);
+    // 現在持っているブロックの高さを全体のノード数で割ったあまりが自分のノードID-1と等しい場合は難易度100000、そうでない場合は1000000．そうでない場合いる？なにかしら返さないと怒られるからっぽい．
+    // 各ノード10回の伝搬時間を取りたいので，ノード数✕10=END_OF_BLOCK_HEIGHTにする．
+    // ノードのidは1から始まることに注意
+    if (selfNode.getBlock().getHeight() % NUM_OF_NODES == selfNode.getNodeID() - 1) {
+      // System.out.println("内: " + selfNode.getNodeID());
+      return new MiningTask(selfNode, 10000000, difficulty, true);
+    } else {
+      // System.out.println("if文外: " + "高さ: " + selfNode.getBlock().getHeight() +
+      // "ID:" + selfNode.getNodeID());
+      return new MiningTask(selfNode, 100000000, difficulty, false);
+    }
+    // return new MiningTask(
+    // selfNode,
+    // (long) (-Math.log(1 - u) * difficulty.doubleValue() /
+    // selfNode.getMiningPower()),
+    // difficulty);
   }
 
   /**
-   * Tests if the receivedBlock is valid with regards to the current block. The receivedBlock is
-   * valid if it is an instance of a Proof of Work block and the received block needs to have a
-   * bigger difficulty than its parent next difficulty and a bigger total difficulty compared to the
+   * Tests if the receivedBlock is valid with regards to the current block. The
+   * receivedBlock is
+   * valid if it is an instance of a Proof of Work block and the received block
+   * needs to have a
+   * bigger difficulty than its parent next difficulty and a bigger total
+   * difficulty compared to the
    * current block.
    *
    * @param receivedBlock the received block
-   * @param currentBlock the current block
+   * @param currentBlock  the current block
    * @return true if block is valid false otherwise
    */
   @Override
@@ -67,15 +94,14 @@ public class ProofOfWork extends AbstractConsensusAlgo {
     ProofOfWorkBlock recPoWBlock = (ProofOfWorkBlock) receivedBlock;
     ProofOfWorkBlock currPoWBlock = (ProofOfWorkBlock) currentBlock;
     int receivedBlockHeight = receivedBlock.getHeight();
-    ProofOfWorkBlock receivedBlockParent =
-        receivedBlockHeight == 0
-            ? null
-            : (ProofOfWorkBlock) receivedBlock.getBlockWithHeight(receivedBlockHeight - 1);
+    ProofOfWorkBlock receivedBlockParent = receivedBlockHeight == 0
+        ? null
+        : (ProofOfWorkBlock) receivedBlock.getBlockWithHeight(receivedBlockHeight - 1);
 
     // TODO - dangerous to split due to short circuit operators being used,
     // refactor?
     return (receivedBlockHeight == 0
-            || recPoWBlock.getDifficulty().compareTo(receivedBlockParent.getNextDifficulty()) >= 0)
+        || recPoWBlock.getDifficulty().compareTo(receivedBlockParent.getNextDifficulty()) >= 0)
         && (currentBlock == null
             || recPoWBlock.getTotalDifficulty().compareTo(currPoWBlock.getTotalDifficulty()) > 0);
   }

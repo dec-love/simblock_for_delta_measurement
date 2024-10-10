@@ -22,7 +22,8 @@ import static simblock.settings.SimulationConfiguration.CBR_FAILURE_BLOCK_SIZE_D
 import static simblock.settings.SimulationConfiguration.CBR_FAILURE_RATE_FOR_CHURN_NODE;
 import static simblock.settings.SimulationConfiguration.CBR_FAILURE_RATE_FOR_CONTROL_NODE;
 import static simblock.settings.SimulationConfiguration.COMPACT_BLOCK_SIZE;
-import static simblock.simulator.Main.OUT_JSON_FILE;
+import static simblock.settings.SimulationConfiguration.NUM_OF_NODES;
+// import static simblock.simulator.Main.OUT_JSON_FILE;
 import static simblock.simulator.Main.random;
 import static simblock.simulator.Network.getBandwidth;
 import static simblock.simulator.Simulator.arriveBlock;
@@ -46,6 +47,10 @@ import simblock.task.RecMessageTask;
 
 /** A class representing a node in the network. */
 public class Node {
+  // ノードごとに各ノードへの伝搬時間を記録する配列
+  private long[] prop = new long[NUM_OF_NODES];
+  // 何回ブロックを生成したかを記録する変数
+  private long propCnt = 0;
   /** Unique node ID. */
   private final int nodeID;
 
@@ -91,14 +96,14 @@ public class Node {
   /**
    * Instantiates a new Node.
    *
-   * @param nodeID the node id
-   * @param numConnection the number of connections a node can have
-   * @param region the region
-   * @param miningPower the mining power
-   * @param routingTableName the routing table name
+   * @param nodeID            the node id
+   * @param numConnection     the number of connections a node can have
+   * @param region            the region
+   * @param miningPower       the mining power
+   * @param routingTableName  the routing table name
    * @param consensusAlgoName the consensus algorithm name
-   * @param useCBR whether the node uses compact block relay
-   * @param isChurnNode whether the node causes churn
+   * @param useCBR            whether the node uses compact block relay
+   * @param isChurnNode       whether the node causes churn
    */
   public Node(
       int nodeID,
@@ -116,16 +121,32 @@ public class Node {
     this.isChurnNode = isChurnNode;
 
     try {
-      this.routingTable =
-          (AbstractRoutingTable)
-              Class.forName(routingTableName).getConstructor(Node.class).newInstance(this);
-      this.consensusAlgo =
-          (AbstractConsensusAlgo)
-              Class.forName(consensusAlgoName).getConstructor(Node.class).newInstance(this);
+      this.routingTable = (AbstractRoutingTable) Class.forName(routingTableName).getConstructor(Node.class)
+          .newInstance(this);
+      this.consensusAlgo = (AbstractConsensusAlgo) Class.forName(consensusAlgoName).getConstructor(Node.class)
+          .newInstance(this);
       this.setNumConnection(numConnection);
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  public long getPropTime(int id) {
+    return this.prop[id - 1];
+  }
+
+  public void propUpdate(int id, long prop) {
+    this.prop[id - 1] += prop;
+    return;
+  }
+
+  public void propCntUpdate() {
+    this.propCnt++;
+    return;
+  }
+
+  public long getPropCnt() {
+    return this.propCnt;
   }
 
   /**
@@ -250,11 +271,13 @@ public class Node {
   /** Mint the genesis block. */
   public void genesisBlock() {
     Block genesis = this.consensusAlgo.genesisBlock();
+    System.out.println("genesisMinter:" + genesis.getMinter().getNodeID());
     this.receiveBlock(genesis);
   }
 
   /**
-   * Adds a new block to the to chain. If node was minting that task instance is abandoned, and the
+   * Adds a new block to the to chain. If node was minting that task instance is
+   * abandoned, and the
    * new block arrival is handled.
    *
    * @param newBlock the new block
@@ -267,7 +290,7 @@ public class Node {
     }
     // Update the current block
     this.block = newBlock;
-    printAddBlock(newBlock);
+    // printAddBlock(newBlock);
     // Observe and handle new block arrival
     arriveBlock(newBlock, this);
   }
@@ -277,23 +300,23 @@ public class Node {
    *
    * @param newBlock the block to be logged
    */
-  private void printAddBlock(Block newBlock) {
-    OUT_JSON_FILE.print("{");
-    OUT_JSON_FILE.print("\"kind\":\"add-block\",");
-    OUT_JSON_FILE.print("\"content\":{");
-    OUT_JSON_FILE.print("\"timestamp\":" + getCurrentTime() + ",");
-    OUT_JSON_FILE.print("\"node-id\":" + this.getNodeID() + ",");
-    OUT_JSON_FILE.print("\"block-id\":" + newBlock.getId());
-    OUT_JSON_FILE.print("}");
-    OUT_JSON_FILE.print("},");
-    OUT_JSON_FILE.flush();
-  }
+  // private void printAddBlock(Block newBlock) {
+  //   OUT_JSON_FILE.print("{");
+  //   OUT_JSON_FILE.print("\"kind\":\"add-block\",");
+  //   OUT_JSON_FILE.print("\"content\":{");
+  //   OUT_JSON_FILE.print("\"timestamp\":" + getCurrentTime() + ",");
+  //   OUT_JSON_FILE.print("\"node-id\":" + this.getNodeID() + ",");
+  //   OUT_JSON_FILE.print("\"block-id\":" + newBlock.getId());
+  //   OUT_JSON_FILE.print("}");
+  //   OUT_JSON_FILE.print("},");
+  //   OUT_JSON_FILE.flush();
+  // }
 
   /**
    * Add orphans.
    *
    * @param orphanBlock the orphan block
-   * @param validBlock the valid block
+   * @param validBlock  the valid block
    */
   // TODO check this out later
   public void addOrphans(Block orphanBlock, Block validBlock) {
@@ -398,8 +421,7 @@ public class Node {
 
     if (message instanceof CmpctBlockMessageTask) {
       Block block = ((CmpctBlockMessageTask) message).getBlock();
-      float CBRfailureRate =
-          this.isChurnNode ? CBR_FAILURE_RATE_FOR_CHURN_NODE : CBR_FAILURE_RATE_FOR_CONTROL_NODE;
+      float CBRfailureRate = this.isChurnNode ? CBR_FAILURE_RATE_FOR_CHURN_NODE : CBR_FAILURE_RATE_FOR_CONTROL_NODE;
       boolean success = random.nextDouble() > CBRfailureRate ? true : false;
       if (success) {
         downloadingBlocks.remove(block);

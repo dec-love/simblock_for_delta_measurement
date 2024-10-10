@@ -17,6 +17,7 @@
 package simblock.task;
 
 import static simblock.simulator.Timer.getCurrentTime;
+import static simblock.settings.SimulationConfiguration.NUM_OF_NODES;
 
 import java.math.BigInteger;
 import simblock.block.ProofOfWorkBlock;
@@ -25,28 +26,40 @@ import simblock.node.Node;
 /** The type Mining task. */
 public class MiningTask extends AbstractMintingTask {
   private final BigInteger difficulty;
+  private boolean validFlag;
 
   /**
    * Instantiates a new Mining task.
    *
-   * @param minter the minter
-   * @param interval the interval
+   * @param minter     the minter
+   * @param interval   the interval
    * @param difficulty the difficulty
    */
   // TODO how is the difficulty expressed and used here?
-  public MiningTask(Node minter, long interval, BigInteger difficulty) {
+  public MiningTask(Node minter, long interval, BigInteger difficulty, boolean validFlag) {
     super(minter, interval);
     this.difficulty = difficulty;
+    this.validFlag = validFlag;
+  }
+
+  public boolean getValidFlag() {
+    return this.validFlag;
   }
 
   @Override
   public void run() {
-    ProofOfWorkBlock createdBlock =
-        new ProofOfWorkBlock(
-            (ProofOfWorkBlock) this.getParent(),
-            this.getMinter(),
-            getCurrentTime(),
-            this.difficulty);
+    // if (!this.getValidFlag()) {
+    // System.out.println("mining_interval < other_interval: " + "高さ: " +
+    // this.getMinter().getBlock().getHeight() + "ID:"
+    // + this.getMinter().getNodeID());
+    // }
+    // if (this.getMinter().getNodeID() == 1 ) {
+    ProofOfWorkBlock createdBlock = new ProofOfWorkBlock(
+        (ProofOfWorkBlock) this.getParent(),
+        this.getMinter(),
+        getCurrentTime(),
+        this.difficulty);
     this.getMinter().receiveBlock(createdBlock);
+    // }
   }
 }

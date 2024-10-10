@@ -22,15 +22,17 @@ import static simblock.settings.NetworkConfiguration.LATENCY;
 import static simblock.settings.NetworkConfiguration.REGION_DISTRIBUTION;
 import static simblock.settings.NetworkConfiguration.REGION_LIST;
 import static simblock.settings.NetworkConfiguration.UPLOAD_BANDWIDTH;
-import static simblock.simulator.Main.STATIC_JSON_FILE;
+// import static simblock.simulator.Main.STATIC_JSON_FILE;
 import static simblock.simulator.Main.random;
 
 import java.util.List;
 import simblock.settings.NetworkConfiguration;
 
 /**
- * The type Network represents a network split in regions, each node belonging to a region with an
- * upload bandwidth and a download bandwidth. Node degrees follow a predefined degree distribution.
+ * The type Network represents a network split in regions, each node belonging
+ * to a region with an
+ * upload bandwidth and a download bandwidth. Node degrees follow a predefined
+ * degree distribution.
  */
 // TODO how is this degree distribution calculated and what does the double
 // array mean
@@ -40,7 +42,7 @@ public class Network {
    * Gets latency according with 20% variance pallet distribution.
    *
    * @param from the from latency
-   * @param to the to latency
+   * @param to   the to latency
    * @return the calculated latency
    */
   public static final long getLatency(int from, int to) {
@@ -51,10 +53,13 @@ public class Network {
   }
 
   /**
-   * Gets the minimum between the <em>from</em> upload bandwidth and <em>to</em> download bandwidth.
+   * Gets the minimum between the <em>from</em> upload bandwidth and <em>to</em>
+   * download bandwidth.
    *
-   * @param from the from index in the {@link NetworkConfiguration#UPLOAD_BANDWIDTH} array.
-   * @param to the to index in the {@link NetworkConfiguration#UPLOAD_BANDWIDTH} array.
+   * @param from the from index in the
+   *             {@link NetworkConfiguration#UPLOAD_BANDWIDTH} array.
+   * @param to   the to index in the {@link NetworkConfiguration#UPLOAD_BANDWIDTH}
+   *             array.
    * @return the bandwidth
    */
   public static final long getBandwidth(int from, int to) {
@@ -71,7 +76,8 @@ public class Network {
   }
 
   /**
-   * Return the number of nodes in the corresponding region as a portion the number of all nodes.
+   * Return the number of nodes in the corresponding region as a portion the
+   * number of all nodes.
    *
    * @return an array the distribution
    */
@@ -92,22 +98,22 @@ public class Network {
   /** Prints the currently active regions to outfile. */
   // TODO
   public static void printRegion() {
-    STATIC_JSON_FILE.print("{\"region\":[");
+    // STATIC_JSON_FILE.print("{\"region\":[");
 
-    int id = 0;
-    for (; id < REGION_LIST.size() - 1; id++) {
-      STATIC_JSON_FILE.print("{");
-      STATIC_JSON_FILE.print("\"id\":" + id + ",");
-      STATIC_JSON_FILE.print("\"name\":\"" + REGION_LIST.get(id) + "\"");
-      STATIC_JSON_FILE.print("},");
-    }
+    // int id = 0;
+    // for (; id < REGION_LIST.size() - 1; id++) {
+    // STATIC_JSON_FILE.print("{");
+    // STATIC_JSON_FILE.print("\"id\":" + id + ",");
+    // STATIC_JSON_FILE.print("\"name\":\"" + REGION_LIST.get(id) + "\"");
+    // STATIC_JSON_FILE.print("},");
+    // }
 
-    STATIC_JSON_FILE.print("{");
-    STATIC_JSON_FILE.print("\"id\":" + id + ",");
-    STATIC_JSON_FILE.print("\"name\":\"" + REGION_LIST.get(id) + "\"");
-    STATIC_JSON_FILE.print("}");
-    STATIC_JSON_FILE.print("]}");
-    STATIC_JSON_FILE.flush();
-    STATIC_JSON_FILE.close();
+    // STATIC_JSON_FILE.print("{");
+    // STATIC_JSON_FILE.print("\"id\":" + id + ",");
+    // STATIC_JSON_FILE.print("\"name\":\"" + REGION_LIST.get(id) + "\"");
+    // STATIC_JSON_FILE.print("}");
+    // STATIC_JSON_FILE.print("]}");
+    // STATIC_JSON_FILE.flush();
+    // STATIC_JSON_FILE.close();
   }
 }

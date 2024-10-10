@@ -76,20 +76,22 @@ public class Main {
 
   /** The output writer. */
   // TODO use logger
-  public static PrintWriter OUT_JSON_FILE;
+  // public static PrintWriter OUT_JSON_FILE;
+  // Propデータを出力するファイル Inputという名前なのは他のシミュレータでInputファイルとして読み込むたため
+  public static PrintWriter INPUT_FILE;
 
   /** The constant STATIC_JSON_FILE. */
   // TODO use logger
-  public static PrintWriter STATIC_JSON_FILE;
+  // public static PrintWriter STATIC_JSON_FILE;
 
   static {
     try {
-      OUT_JSON_FILE =
-          new PrintWriter(
-              new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./output.json")))));
-      STATIC_JSON_FILE =
-          new PrintWriter(
-              new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./static.json")))));
+      INPUT_FILE = new PrintWriter(
+          new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./input.txt")))));
+      // OUT_JSON_FILE = new PrintWriter(
+      //     new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./output.json")))));
+      // STATIC_JSON_FILE = new PrintWriter(
+      //     new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./static.json")))));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -105,8 +107,8 @@ public class Main {
     setTargetInterval(INTERVAL);
 
     // start json format
-    OUT_JSON_FILE.print("[");
-    OUT_JSON_FILE.flush();
+    // OUT_JSON_FILE.print("[");
+    // OUT_JSON_FILE.flush();
 
     // Log regions
     printRegion();
@@ -115,23 +117,27 @@ public class Main {
     constructNetworkWithAllNodes(NUM_OF_NODES);
 
     // Initial block height, we stop at END_BLOCK_HEIGHT
+    // 最初1から始まる
     int currentBlockHeight = 1;
 
     // Iterate over tasks and handle
     while (getTask() != null) {
       if (getTask() instanceof AbstractMintingTask) {
         AbstractMintingTask task = (AbstractMintingTask) getTask();
+        // genesisブロックのmintingにはtaskがない．genesisブロックの次のブロック（block.getHeight()が1）の親の高さは0になる．つまり，その次のblock.getHeight()が２のブロックが作られたときにここが+1される
         if (task.getParent().getHeight() == currentBlockHeight) {
           currentBlockHeight++;
         }
+        // END_BLOCK_HEIGHTがペアレントになったら終了．
+        // 例えば，END_BLOCK_HEIGHTは2とする．このときblock.getHeight()が2のタスクは実行される．つまり，END_BLOCK_HEIGHTは単純に実行してほしいブロックの高さを指定している．
         if (currentBlockHeight > END_BLOCK_HEIGHT) {
           break;
         }
         // Log every 100 blocks and at the second block
         // TODO use constants here
-        if (currentBlockHeight % 100 == 0 || currentBlockHeight == 2) {
-          writeGraph(currentBlockHeight);
-        }
+        // if (currentBlockHeight % 100 == 0 || currentBlockHeight == 2) {
+        // writeGraph(currentBlockHeight);
+        // }
       }
       // Execute task
       runTask();
@@ -212,15 +218,15 @@ public class Main {
       ex.printStackTrace();
     }
 
-    OUT_JSON_FILE.print("{");
-    OUT_JSON_FILE.print("\"kind\":\"simulation-end\",");
-    OUT_JSON_FILE.print("\"content\":{");
-    OUT_JSON_FILE.print("\"timestamp\":" + getCurrentTime());
-    OUT_JSON_FILE.print("}");
-    OUT_JSON_FILE.print("}");
-    // end json format
-    OUT_JSON_FILE.print("]");
-    OUT_JSON_FILE.close();
+    // OUT_JSON_FILE.print("{");
+    // OUT_JSON_FILE.print("\"kind\":\"simulation-end\",");
+    // OUT_JSON_FILE.print("\"content\":{");
+    // OUT_JSON_FILE.print("\"timestamp\":" + getCurrentTime());
+    // OUT_JSON_FILE.print("}");
+    // OUT_JSON_FILE.print("}");
+    // // end json format
+    // OUT_JSON_FILE.print("]");
+    // OUT_JSON_FILE.close();
 
     long end = System.currentTimeMillis();
     simulationTime += end - start;
@@ -243,7 +249,7 @@ public class Main {
    * Populate the list using the distribution.
    *
    * @param distribution the distribution
-   * @param facum whether the distribution is cumulative distribution
+   * @param facum        whether the distribution is cumulative distribution
    * @return array list
    */
   // TODO explanation on facum etc.
@@ -294,7 +300,8 @@ public class Main {
   }
 
   /**
-   * Generates a random mining power expressed as Hash Rate, and is the number of mining (hash
+   * Generates a random mining power expressed as Hash Rate, and is the number of
+   * mining (hash
    * calculation) executed per millisecond.
    *
    * @return the number of hash calculations executed per millisecond.
@@ -310,6 +317,7 @@ public class Main {
    *
    * @return the node that will mint the genesis block
    */
+  // ハッシュレートに基づいてジェネシスブロック生成させるノードを選択
   public static Node getGenesisMinter() {
     long totalMiningPower = 0;
     for (Node node : getSimulatedNodes()) {
@@ -349,31 +357,32 @@ public class Main {
     // List of churn nodes.
     List<Boolean> churnNodes = makeRandomList(CHURN_NODE_RATE);
 
+    // nodeのidは1から始まる
     for (int id = 1; id <= numNodes; id++) {
       // Each node gets assigned a region, its degree, mining power, routing table and
       // consensus algorithm
-      Node node =
-          new Node(
-              id,
-              degreeList.get(id - 1) + 1,
-              regionList.get(id - 1),
-              genMiningPower(),
-              TABLE,
-              ALGO,
-              useCBRNodes.get(id - 1),
-              churnNodes.get(id - 1));
+      Node node = new Node(
+          id,
+          degreeList.get(id - 1) + 1,
+          regionList.get(id - 1),
+          genMiningPower(),
+          TABLE,
+          ALGO,
+          // useCBRNodes.get(id - 1),
+          false,
+          churnNodes.get(id - 1));
       // Add the node to the list of simulated nodes
       addNode(node);
 
-      OUT_JSON_FILE.print("{");
-      OUT_JSON_FILE.print("\"kind\":\"add-node\",");
-      OUT_JSON_FILE.print("\"content\":{");
-      OUT_JSON_FILE.print("\"timestamp\":0,");
-      OUT_JSON_FILE.print("\"node-id\":" + id + ",");
-      OUT_JSON_FILE.print("\"region-id\":" + regionList.get(id - 1));
-      OUT_JSON_FILE.print("}");
-      OUT_JSON_FILE.print("},");
-      OUT_JSON_FILE.flush();
+      // OUT_JSON_FILE.print("{");
+      // OUT_JSON_FILE.print("\"kind\":\"add-node\",");
+      // OUT_JSON_FILE.print("\"content\":{");
+      // OUT_JSON_FILE.print("\"timestamp\":0,");
+      // OUT_JSON_FILE.print("\"node-id\":" + id + ",");
+      // OUT_JSON_FILE.print("\"region-id\":" + regionList.get(id - 1));
+      // OUT_JSON_FILE.print("}");
+      // OUT_JSON_FILE.print("},");
+      // OUT_JSON_FILE.flush();
     }
 
     // Link newly generated nodes
@@ -383,22 +392,24 @@ public class Main {
 
     // Select node based on mining power to mint the genesis block
     getGenesisMinter().genesisBlock();
+    // getSimulatedNodes().get(0).minting();
   }
 
   /**
    * Network information when block height is <em>blockHeight</em>, in format:
    *
-   * <p><em>nodeID_1</em>, <em>nodeID_2</em>
+   * <p>
+   * <em>nodeID_1</em>, <em>nodeID_2</em>
    *
-   * <p>meaning there is a connection from nodeID_1 to right nodeID_1.
+   * <p>
+   * meaning there is a connection from nodeID_1 to right nodeID_1.
    *
    * @param blockHeight the index of the graph and the current block height
    */
   // TODO use logger
   public static void writeGraph(int blockHeight) {
     try {
-      FileWriter fw =
-          new FileWriter(new File(OUT_FILE_URI.resolve("./graph/" + blockHeight + ".txt")), false);
+      FileWriter fw = new FileWriter(new File(OUT_FILE_URI.resolve("./graph/" + blockHeight + ".txt")), false);
       PrintWriter pw = new PrintWriter(new BufferedWriter(fw));
 
       for (int index = 1; index <= getSimulatedNodes().size(); index++) {

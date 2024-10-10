@@ -16,7 +16,7 @@
 
 package simblock.task;
 
-import static simblock.simulator.Main.OUT_JSON_FILE;
+// import static simblock.simulator.Main.OUT_JSON_FILE;
 import static simblock.simulator.Network.getLatency;
 import static simblock.simulator.Timer.getCurrentTime;
 
@@ -36,8 +36,8 @@ public class CmpctBlockMessageTask extends AbstractMessageTask {
   /**
    * Instantiates a new Compact block message task.
    *
-   * @param from the sender
-   * @param to the receiver
+   * @param from  the sender
+   * @param to    the receiver
    * @param block the block instance
    * @param delay the delay of the message transmission
    */
@@ -52,23 +52,27 @@ public class CmpctBlockMessageTask extends AbstractMessageTask {
     return this.interval;
   }
 
-  /** Sends a new compact block message from the sender to the receiver and logs the event. */
+  /**
+   * Sends a new compact block message from the sender to the receiver and logs
+   * the event.
+   */
   @Override
   public void run() {
 
     this.getFrom().sendNextBlockMessage();
 
-    OUT_JSON_FILE.print("{");
-    OUT_JSON_FILE.print("\"kind\":\"flow-block\",");
-    OUT_JSON_FILE.print("\"content\":{");
-    OUT_JSON_FILE.print("\"transmission-timestamp\":" + (getCurrentTime() - this.interval) + ",");
-    OUT_JSON_FILE.print("\"reception-timestamp\":" + getCurrentTime() + ",");
-    OUT_JSON_FILE.print("\"begin-node-id\":" + getFrom().getNodeID() + ",");
-    OUT_JSON_FILE.print("\"end-node-id\":" + getTo().getNodeID() + ",");
-    OUT_JSON_FILE.print("\"block-id\":" + block.getId());
-    OUT_JSON_FILE.print("}");
-    OUT_JSON_FILE.print("},");
-    OUT_JSON_FILE.flush();
+    // OUT_JSON_FILE.print("{");
+    // OUT_JSON_FILE.print("\"kind\":\"flow-block\",");
+    // OUT_JSON_FILE.print("\"content\":{");
+    // OUT_JSON_FILE.print("\"transmission-timestamp\":" + (getCurrentTime() -
+    // this.interval) + ",");
+    // OUT_JSON_FILE.print("\"reception-timestamp\":" + getCurrentTime() + ",");
+    // OUT_JSON_FILE.print("\"begin-node-id\":" + getFrom().getNodeID() + ",");
+    // OUT_JSON_FILE.print("\"end-node-id\":" + getTo().getNodeID() + ",");
+    // OUT_JSON_FILE.print("\"block-id\":" + block.getId());
+    // OUT_JSON_FILE.print("}");
+    // OUT_JSON_FILE.print("},");
+    // OUT_JSON_FILE.flush();
 
     super.run();
   }
